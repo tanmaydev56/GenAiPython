@@ -28,3 +28,8 @@ safetensors
 Usage
 python app.py
 > Enter your prompt: "A magical castle in the clouds"
+
+
+according to the python code the output generated is 
+
+![alt text](image.png)

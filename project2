@@ -1,0 +1,106 @@
+"Unlike our image generator that transformed text-to-images, 
+this project processes conversation flow.
+ We'll use ConversationChain from LangChain, a popular AI framework."
+
+
+ step - 1
+
+ !pip install langchain openai tiktoken
+ (in google colab)
+
+ langchain: framework for ai Chains
+ openai: Acess to gpt models
+ tiktoken: Token Counter(like how we measured image resolition steps)
+
+
+ step -2 
+
+ from langchain.memory import ConversationBufferMemory
+from langchain.chains import ConversationChain
+from langchain.llms import OpenAI
+
+memory = ConversationBufferMemory()  # Stores conversation history
+
+chatbot = ConversationChain(
+    llm=OpenAI(temperature=0.7),  # Creativity control (0-1)
+    memory=memory
+)
+
+temperature=0.7: Balances creativity vs predictability (like our guidance_scale in Stable Diffusion)
+
+ConversationBufferMemory: The "brain" that remembers chats
+
+step - 5 
+first interaction 
+response = chatbot.predict(input="Hi! I'm learning AI. What's the coolest thing about chatbots?")
+print(response)
+
+
+
+
+
+
+<!-- !pip install langchain langchain-community openai -->
+<!-- insted of using langchain.llms use this  -->
+
+
+
+
+
+
+
+QUESTIONS 
+1. What key feature makes this different from our Stable Diffusion project?
+    Image gen = text→image, Chatbot = text→text with memory
+
+2. Why do we need tiktoken if we're not generating images?
+    ans -  To count tokens (words/parts) since GPT has input limits
+
+3. What happens if we set temperature to 0? How about 1.5?
+    0 = very rigid, 1.5 = overly creative (may hallucinate)
+4. Why could it remember your first question?
+    ConversationBufferMemory stores past inputs
+5. Where would this be useful in real applications?
+    Customer support, education, therapy bots
+
+
+
+
+<!-- if u want to create chat bot from gemini -->
+
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.runnables import Runnable
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.memory import ChatMessageHistory, ConversationBufferMemory
+
+# Setup memory
+memory = ConversationBufferMemory(return_messages=True)
+
+# Setup prompt
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are a helpful assistant named Gemu."),
+    MessagesPlaceholder(variable_name="history"),
+    ("human", "{input}")
+])
+
+# Setup Gemini LLM
+llm = ChatGoogleGenerativeAI(
+    model="gemini-1.5-flash",
+    google_api_key=""
+)
+
+# Combine into a runnable chain
+from langchain.chains import LLMChain
+
+chain = LLMChain(
+    llm=llm,
+    prompt=prompt,
+    memory=memory
+)
+
+# Run it
+response = chain.invoke({"input": "what is my Name"})
+print(response["text"])
+
+
+
