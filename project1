@@ -1,0 +1,30 @@
+You're building a Text-to-Image Generator using Stable Diffusion, 
+an AI model that converts text prompts (like "Rainy forest with fog") 
+into high-quality images. 
+This is a popular tool for artists, designers, and developers.
+
+
+1.Core Technology
+    Uses diffusers library (Hugging Face) + PyTorch
+    Leverages the pretrained Stable Diffusion v1.5 model
+    Runs on GPU (faster) or CPU (slower but works)
+
+2.Workflow
+Text Prompt → AI Model → Generated Image → Save/Display
+
+3.Features
+    Customizable prompts (any scene/style)
+    Optimized for speed (torch.float16)
+    Auto-detects GPU/CPU
+
+
+requirements.txt
+diffusers>=0.24.0
+transformers>=4.31.0
+torch>=2.0.0
+accelerate
+safetensors
+
+Usage
+python app.py
+> Enter your prompt: "A magical castle in the clouds"
