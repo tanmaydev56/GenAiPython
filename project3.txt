@@ -1,0 +1,142 @@
+ Complete Notes for GPT-2 Token Prediction & Generation Code
+🔹 1. Import Libraries
+python
+Copy
+Edit
+from transformers import AutoTokenizer, AutoModelForCausalLM
+import torch
+import matplotlib.pyplot as plt
+transformers: From Hugging Face, used to load pretrained language models like GPT-2.
+
+torch: PyTorch library for tensor operations and neural networks.
+
+matplotlib.pyplot: Used for plotting bar graphs.
+
+🔹 2. Load Model & Tokenizer
+python
+Copy
+Edit
+tokenizer = AutoTokenizer.from_pretrained("gpt2")
+model = AutoModelForCausalLM.from_pretrained("gpt2", pad_token_id=tokenizer.eos_token_id)
+AutoTokenizer: Converts text into model-readable tokens (IDs) and vice versa.
+
+AutoModelForCausalLM: GPT-2 model for Causal Language Modeling (next-token prediction).
+
+pad_token_id: GPT-2 doesn’t have a pad token, so we use its eos_token_id as a workaround.
+
+🔹 3. Prepare Input Text
+python
+Copy
+Edit
+input_text = "You are going to"
+inputs = tokenizer(input_text, return_tensors="pt")
+input_ids = inputs['input_ids']
+tokenizer(...): Converts your text to token IDs.
+
+return_tensors="pt": Returns PyTorch tensors.
+
+input_ids: The actual IDs that represent each word/sub-word.
+
+python
+Copy
+Edit
+print("📥 Input IDs:", input_ids)
+This shows you the numeric form of your input — what GPT-2 sees.
+
+🔹 4. Run Model and Get Logits
+python
+Copy
+Edit
+with torch.no_grad():
+    outputs = model(**inputs)
+logits = outputs.logits[0, -1]
+torch.no_grad(): Disables gradient tracking to save memory during inference.
+
+model(**inputs): Runs the model on the input.
+
+logits: Raw, unnormalized scores for each token in the vocabulary.
+
+logits[0, -1]: Logits for the last token, used to predict the next token.
+
+🔹 5. Logit Biasing (Optional Enhancement)
+python
+Copy
+Edit
+forbidden_words = ["gonna", "ain't"]
+bias_tokens = [tokenizer.encode(w, add_special_tokens=False)[0] for w in forbidden_words]
+logits[bias_tokens] -= 5.0
+Penalizes specific informal words by reducing their score → they’re less likely to be chosen.
+
+You can use this to make the model more formal or domain-specific.
+
+🔹 6. Top-K Prediction
+python
+Copy
+Edit
+top_k = 10
+top_logits, top_indices = torch.topk(logits, top_k)
+probs = torch.nn.functional.softmax(top_logits, dim=0)
+topk: Takes the top 10 scores from the logits.
+
+softmax: Converts scores to probabilities (all between 0–1, summing to 1).
+
+python
+Copy
+Edit
+for i in range(top_k):
+    ...
+Displays the top 10 next-token predictions with probabilities.
+
+🔹 7. Step-by-Step Generation
+python
+Copy
+Edit
+generated_ids = input_ids.clone()
+Clone the input so we can build on it one token at a time.
+
+python
+Copy
+Edit
+for i in range(10):
+    outputs = model(input_ids=generated_ids)
+    next_token_logits = outputs.logits[:, -1, :]
+    next_token_id = torch.argmax(next_token_logits, dim=-1).unsqueeze(0)
+    generated_ids = torch.cat([generated_ids, next_token_id], dim=1)
+Predict the next token → append → repeat.
+
+Builds a longer sentence one token at a time.
+
+python
+Copy
+Edit
+current_text = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
+print(f"[{i+1}] {current_text}")
+Decodes the new sequence back into readable text after each token.
+
+🔹 8. Show Final Output Token IDs
+python
+Copy
+Edit
+print("\n📤 Output IDs:", generated_ids)
+Prints the token ID list for the final generated text.
+
+🔹 9. Plot Top-10 Predictions
+python
+Copy
+Edit
+tokens = [tokenizer.decode([idx]) for idx in top_indices]
+probs = probs.detach().numpy()
+...
+plt.bar(tokens, probs)
+...
+Visualizes the Top-10 predicted tokens and their probabilities using a bar chart.
+
+✅ Summary: What This Code Does
+Feature	Description
+Input Encoding	Converts your text into token IDs
+Token Prediction	Predicts top 10 possible next tokens
+Logit Biasing	Lowers probability of unwanted words
+Token-by-Token Generation	Grows a sentence word-by-word
+Plotting	Visualizes top predictions
+Output	Shows raw IDs and final generated text
+
